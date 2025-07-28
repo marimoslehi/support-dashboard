@@ -1,0 +1,18 @@
+# Flask Web Framework - Updated for Python 3.13 compatibility
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+
+# Database and ORM - Latest version with Python 3.13 support
+SQLAlchemy==2.0.25
+
+# Development and Testing
+python-dotenv==1.0.0
+
+# Date and Time Utilities
+python-dateutil==2.8.2
+
+# Security (for password hashing)
+Werkzeug==3.0.1
+
+# CORS support for API
+Flask-CORS==4.0.0

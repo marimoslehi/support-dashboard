@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Customer Support{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">📊 Support Dashboard</h1>
+            <p class="text-muted">Welcome back, {{ current_user.full_name }}!</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h2 class="mb-0">{{ stats.total_tickets }}</h2>
+                    <p class="mb-0">Total Tickets</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h2 class="mb-0">{{ stats.open_tickets }}</h2>
+                    <p class="mb-0">Open Tickets</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h2 class="mb-0">{{ stats.in_progress }}</h2>
+                    <p class="mb-0">In Progress</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h2 class="mb-0">{{ stats.resolved_tickets }}</h2>
+                    <p class="mb-0">Resolved</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Tickets</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_tickets %}
+                        {% for ticket in recent_tickets %}
+                        <div class="border-bottom py-2">
+                            <h6><a href="{{ url_for('ticket_detail', ticket_id=ticket.id) }}">{{ ticket.title }}</a></h6>
+                            <p class="text-muted mb-1">{{ ticket.description[:100] }}...</p>
+                            <small>{{ ticket.created_date.strftime('%Y-%m-%d %H:%M') }} - {{ ticket.priority }}</small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No recent tickets found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('new_ticket') }}" class="btn btn-primary">Create New Ticket</a>
+                        <a href="{{ url_for('tickets') }}" class="btn btn-outline-primary">View All Tickets</a>
+                        <a href="{{ url_for('knowledge_base') }}" class="btn btn-outline-info">Knowledge Base</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
