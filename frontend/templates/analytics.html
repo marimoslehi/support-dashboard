@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Customer Support{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">📊 Analytics Dashboard</h1>
+                    <p class="text-muted mb-0">Performance metrics and insights for the support team</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary" onclick="refreshData()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh Data
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="exportReport()">
+                        <i class="bi bi-download me-1"></i>Export Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-4">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h2 class="mb-0">{{ status_data.values()|sum }}</h2>
+                            <p class="mb-0">Total Tickets</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-ticket-perforated" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-4">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h2 class="mb-0">{{ status_data['Open'] + status_data['In Progress'] }}</h2>
+                            <p class="mb-0">Active Tickets</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-exclamation-triangle" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-4">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h2 class="mb-0">{{ status_data['Resolved'] }}</h2>
+                            <p class="mb-0">Resolved Tickets</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-check-circle" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-4">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h2 class="mb-0">{{ recent_tickets }}</h2>
+                            <p class="mb-0">This Week</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-calendar-week" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Status Distribution Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pie-chart me-2"></i>Ticket Status Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px; position: relative;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Priority Distribution Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>Priority Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px; position: relative;">
+                        <canvas id="priorityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category and Team Performance Row -->
+    <div class="row mb-4">
+        <!-- Category Breakdown -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>Issues by Category
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px; position: relative;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Team Performance -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-people me-2"></i>Team Performance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if team_data %}
+                        {% for engineer in team_data %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h6 class="mb-0">{{ engineer.name }}</h6>
+                                <small class="text-muted">{{ engineer.resolution_rate }}%</small>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" 
+                                     style="width: {{ engineer.resolution_rate }}%"></div>
+                            </div>
+                            <small class="text-muted">{{ engineer.resolved }}/{{ engineer.total }} resolved</small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-person-x" style="font-size: 3rem; color: #6c757d;"></i>
+                            <p class="text-muted mt-2">No team performance data available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Statistics -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table me-2"></i>Detailed Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Status Breakdown -->
+                        <div class="col-md-3 mb-3">
+                            <h6>Status Breakdown</h6>
+                            <ul class="list-unstyled">
+                                {% for status, count in status_data.items() %}
+                                <li class="d-flex justify-content-between">
+                                    <span>{{ status }}:</span>
+                                    <strong>{{ count }}</strong>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <!-- Priority Breakdown -->
+                        <div class="col-md-3 mb-3">
+                            <h6>Priority Breakdown</h6>
+                            <ul class="list-unstyled">
+                                {% for priority, count in priority_data.items() %}
+                                <li class="d-flex justify-content-between">
+                                    <span>{{ priority }}:</span>
+                                    <strong>{{ count }}</strong>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <!-- Category Breakdown -->
+                        <div class="col-md-3 mb-3">
+                            <h6>Category Breakdown</h6>
+                            <ul class="list-unstyled">
+                                {% for category, count in category_data.items() %}
+                                <li class="d-flex justify-content-between">
+                                    <span>{{ category }}:</span>
+                                    <strong>{{ count }}</strong>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <!-- Key Metrics -->
+                        <div class="col-md-3 mb-3">
+                            <h6>Key Metrics</h6>
+                            <ul class="list-unstyled">
+                                <li class="d-flex justify-content-between">
+                                    <span>Total Tickets:</span>
+                                    <strong>{{ status_data.values()|sum }}</strong>
+                                </li>
+                                <li class="d-flex justify-content-between">
+                                    <span>Resolution Rate:</span>
+                                    <strong>
+                                        {% set total = status_data.values()|sum %}
+                                        {% if total > 0 %}
+                                            {{ ((status_data['Resolved'] + status_data['Closed']) / total * 100)|round(1) }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </strong>
+                                </li>
+                                <li class="d-flex justify-content-between">
+                                    <span>Active Issues:</span>
+                                    <strong>{{ status_data['Open'] + status_data['In Progress'] }}</strong>
+                                </li>
+                                <li class="d-flex justify-content-between">
+                                    <span>This Week:</span>
+                                    <strong>{{ recent_tickets }}</strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Chart data from backend
+const statusData = {{ status_data|tojson }};
+const priorityData = {{ priority_data|tojson }};
+const categoryData = {{ category_data|tojson }};
+
+// Chart colors
+const colors = {
+    primary: '#2563eb',
+    warning: '#d97706',
+    success: '#059669',
+    danger: '#dc2626',
+    info: '#0284c7',
+    secondary: '#64748b'
+};
+
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeStatusChart();
+    initializePriorityChart();
+    initializeCategoryChart();
+});
+
+function initializeStatusChart() {
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(statusData),
+            datasets: [{
+                data: Object.values(statusData),
+                backgroundColor: [
+                    colors.danger,    // Open
+                    colors.warning,   // In Progress
+                    colors.success,   // Resolved
+                    colors.secondary  // Closed
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initializePriorityChart() {
+    const ctx = document.getElementById('priorityChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(priorityData),
+            datasets: [{
+                label: 'Tickets by Priority',
+                data: Object.values(priorityData),
+                backgroundColor: [
+                    colors.danger,   // Critical
+                    colors.warning,  // High
+                    colors.info,     // Medium
+                    colors.success   // Low
+                ],
+                borderRadius: 4,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initializeCategoryChart() {
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'horizontalBar',
+        data: {
+            labels: Object.keys(categoryData),
+            datasets: [{
+                label: 'Tickets by Category',
+                data: Object.values(categoryData),
+                backgroundColor: colors.primary,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+function refreshData() {
+    location.reload();
+}
+
+function exportReport() {
+    // Simple export functionality
+    const reportData = {
+        status: statusData,
+        priority: priorityData,
+        category: categoryData,
+        timestamp: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(reportData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'support-analytics-' + new Date().toISOString().split('T')[0] + '.json';
+    link.click();
+    URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}

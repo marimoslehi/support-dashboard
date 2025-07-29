@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from werkzeug.security import check_password_hash
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import os
 from functools import wraps
 
@@ -140,7 +140,7 @@ def ticket_detail(ticket_id):
     engineers = User.query.filter(
         User.role.in_(['Senior Engineer', 'Network Engineer', 'Support Specialist', 'Junior Engineer', 'Admin'])
     ).all()
-
+    
     return render_template('ticket_detail.html', ticket=ticket, engineers=engineers)
 
 @app.route('/tickets/new', methods=['GET', 'POST'])
@@ -186,6 +186,25 @@ def new_ticket():
     
     # GET request - show the form
     return render_template('ticket_form.html')
+
+@app.route('/tickets/<int:ticket_id>/update', methods=['POST'])
+@login_required
+def update_ticket(ticket_id):
+    """Update ticket via form submission"""
+    ticket = Ticket.query.get_or_404(ticket_id)
+    
+    if 'status' in request.form:
+        ticket.status = request.form['status']
+    if 'priority' in request.form:
+        ticket.priority = request.form['priority']
+    if 'assigned_to' in request.form:
+        ticket.assigned_to = request.form['assigned_to']
+    
+    ticket.updated_date = datetime.now(timezone.utc)
+    db.session.commit()
+    
+    flash('Ticket updated successfully!', 'success')
+    return redirect(url_for('ticket_detail', ticket_id=ticket_id))
 
 @app.route('/knowledge-base')
 @login_required
@@ -267,28 +286,71 @@ def knowledge_article(article_id):
 @app.route('/analytics')
 @login_required
 def analytics():
-    """Analytics page"""
-    return render_template('analytics.html')
-
-@app.route('/tickets/<int:ticket_id>/update', methods=['POST'])
-@login_required
-def update_ticket(ticket_id):
-    """Update ticket via form submission"""
-    ticket = Ticket.query.get_or_404(ticket_id)
-    
-    if 'status' in request.form:
-        ticket.status = request.form['status']
-    if 'priority' in request.form:
-        ticket.priority = request.form['priority']
-    if 'assigned_to' in request.form:
-        ticket.assigned_to = request.form['assigned_to']
-    
-    ticket.updated_date = datetime.now(timezone.utc)
-    db.session.commit()
-    
-    flash('Ticket updated successfully!', 'success')
-    return redirect(url_for('ticket_detail', ticket_id=ticket_id))
-
+    """Analytics dashboard"""
+    try:
+        # Ticket status distribution
+        status_data = {
+            'Open': Ticket.query.filter_by(status='Open').count(),
+            'In Progress': Ticket.query.filter_by(status='In Progress').count(),
+            'Resolved': Ticket.query.filter_by(status='Resolved').count(),
+            'Closed': Ticket.query.filter_by(status='Closed').count()
+        }
+        
+        # Priority distribution
+        priority_data = {
+            'Critical': Ticket.query.filter_by(priority='Critical').count(),
+            'High': Ticket.query.filter_by(priority='High').count(),
+            'Medium': Ticket.query.filter_by(priority='Medium').count(),
+            'Low': Ticket.query.filter_by(priority='Low').count()
+        }
+        
+        # Category distribution - simplified approach
+        all_tickets = Ticket.query.all()
+        category_data = {}
+        for ticket in all_tickets:
+            if ticket.category:
+                category_data[ticket.category] = category_data.get(ticket.category, 0) + 1
+        
+        # Recent activity (last 7 days)
+        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        recent_tickets = Ticket.query.filter(Ticket.created_date >= seven_days_ago).count()
+        
+        # Team performance - simplified approach
+        team_data = []
+        assigned_tickets = Ticket.query.filter(Ticket.assigned_to.isnot(None)).all()
+        
+        # Group tickets by assigned engineer
+        engineer_stats = {}
+        for ticket in assigned_tickets:
+            engineer = ticket.assigned_to
+            if engineer not in engineer_stats:
+                engineer_stats[engineer] = {'total': 0, 'resolved': 0}
+            
+            engineer_stats[engineer]['total'] += 1
+            if ticket.status in ['Resolved', 'Closed']:
+                engineer_stats[engineer]['resolved'] += 1
+        
+        # Convert to list format
+        for engineer, stats in engineer_stats.items():
+            resolution_rate = round((stats['resolved'] / stats['total'] * 100), 1) if stats['total'] > 0 else 0
+            team_data.append({
+                'name': engineer,
+                'total': stats['total'],
+                'resolved': stats['resolved'],
+                'resolution_rate': resolution_rate
+            })
+        
+        return render_template('analytics.html',
+                             status_data=status_data,
+                             priority_data=priority_data,
+                             category_data=category_data,
+                             recent_tickets=recent_tickets,
+                             team_data=team_data)
+                             
+    except Exception as e:
+        print(f"Analytics error: {e}")
+        flash(f'Error loading analytics: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     with app.app_context():
