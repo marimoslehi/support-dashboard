@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Ticket - Customer Support{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('tickets') }}">Tickets</a></li>
+                    <li class="breadcrumb-item active">New Ticket</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0">🎫 Create New Support Ticket</h1>
+            <p class="text-muted">Report a network issue or request technical support</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>Ticket Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="title" class="form-label">Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" required
+                                       placeholder="Brief description of the issue">
+                                <div class="invalid-feedback">
+                                    Please provide a ticket title.
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="priority" class="form-label">Priority *</label>
+                                <select class="form-select" id="priority" name="priority" required>
+                                    <option value="">Choose priority...</option>
+                                    <option value="Low">Low - General inquiry</option>
+                                    <option value="Medium" selected>Medium - Standard issue</option>
+                                    <option value="High">High - Business impact</option>
+                                    <option value="Critical">Critical - Service down</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a priority level.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="category" class="form-label">Category *</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Choose category...</option>
+                                    <option value="WiFi">WiFi - Wireless connectivity</option>
+                                    <option value="VLAN">VLAN - Network segmentation</option>
+                                    <option value="DHCP">DHCP - IP address assignment</option>
+                                    <option value="VPN">VPN - Remote access</option>
+                                    <option value="Hardware">Hardware - Physical equipment</option>
+                                    <option value="Security">Security - Firewall/Access control</option>
+                                    <option value="Performance">Performance - Speed/Latency</option>
+                                    <option value="Other">Other - General network issue</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a category.
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="customer_email" class="form-label">Your Email *</label>
+                                <input type="email" class="form-control" id="customer_email" name="customer_email" required
+                                       placeholder="your.email@company.com">
+                                <div class="invalid-feedback">
+                                    Please provide a valid email address.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description *</label>
+                            <textarea class="form-control" id="description" name="description" rows="6" required
+                                      placeholder="Please provide detailed information about the issue:
+
+- What were you trying to do?
+- What happened instead?
+- When did this start?
+- Is this affecting multiple users?
+- Any error messages?
+
+The more details you provide, the faster we can help!"></textarea>
+                            <div class="invalid-feedback">
+                                Please provide a detailed description of the issue.
+                            </div>
+                        </div>
+
+                        <!-- Additional Info Section -->
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-info-circle me-2"></i>Additional Information (Optional)
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="affected_users" class="form-label">Number of Affected Users</label>
+                                        <select class="form-select" id="affected_users" name="affected_users">
+                                            <option value="">Select...</option>
+                                            <option value="Just me">Just me</option>
+                                            <option value="2-5 users">2-5 users</option>
+                                            <option value="6-20 users">6-20 users</option>
+                                            <option value="21+ users">21+ users</option>
+                                            <option value="Entire department">Entire department</option>
+                                            <option value="Company-wide">Company-wide</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="location" class="form-label">Location/Building</label>
+                                        <input type="text" class="form-control" id="location" name="location"
+                                               placeholder="e.g., Main Office, Building A, Floor 2">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="steps_taken" class="form-label">Troubleshooting Steps Already Taken</label>
+                                    <textarea class="form-control" id="steps_taken" name="steps_taken" rows="3"
+                                              placeholder="What have you already tried to fix this issue?"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('tickets') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>Create Ticket
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar with Help -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-question-circle me-2"></i>Need Help?
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Quick Self-Service</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('knowledge_base', category='WiFi') }}" class="text-decoration-none">
+                            <i class="bi bi-wifi me-2"></i>WiFi Troubleshooting
+                        </a></li>
+                        <li><a href="{{ url_for('knowledge_base', category='VPN') }}" class="text-decoration-none">
+                            <i class="bi bi-shield-lock me-2"></i>VPN Setup Guide
+                        </a></li>
+                        <li><a href="{{ url_for('knowledge_base', category='Hardware') }}" class="text-decoration-none">
+                            <i class="bi bi-router me-2"></i>Hardware Issues
+                        </a></li>
+                    </ul>
+
+                    <hr>
+
+                    <h6>Priority Guidelines</h6>
+                    <small class="text-muted">
+                        <strong>Critical:</strong> Complete service outage<br>
+                        <strong>High:</strong> Significant business impact<br>
+                        <strong>Medium:</strong> Standard issues<br>
+                        <strong>Low:</strong> Minor issues or questions
+                    </small>
+
+                    <hr>
+
+                    <h6>Response Times</h6>
+                    <small class="text-muted">
+                        <strong>Critical:</strong> 1 hour<br>
+                        <strong>High:</strong> 4 hours<br>
+                        <strong>Medium:</strong> 1 business day<br>
+                        <strong>Low:</strong> 2-3 business days
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Auto-suggest titles based on category
+document.getElementById('category').addEventListener('change', function() {
+    const titleInput = document.getElementById('title');
+    const category = this.value;
+    
+    if (!titleInput.value) {
+        const suggestions = {
+            'WiFi': 'WiFi connection issues in ',
+            'DHCP': 'Cannot obtain IP address - ',
+            'VPN': 'VPN connection failing - ',
+            'VLAN': 'Network connectivity between VLANs - ',
+            'Hardware': 'Network equipment malfunction - ',
+            'Security': 'Firewall blocking access to ',
+            'Performance': 'Slow network performance in '
+        };
+        
+        if (suggestions[category]) {
+            titleInput.placeholder = suggestions[category] + 'describe location/details';
+        }
+    }
+});
+</script>
+{% endblock %}

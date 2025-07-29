@@ -20,35 +20,33 @@
                     <h1 class="h3 mb-2">🎫 {{ ticket.title }}</h1>
                     <div class="d-flex align-items-center gap-3">
                         <span class="badge bg-light text-dark fs-6">#{{ ticket.id }}</span>
-                        <span class="priority-{{ ticket.priority.lower() }}">{{ ticket.priority }}</span>
-                        <span class="status-{{ ticket.status.lower().replace(' ', '-') }}">{{ ticket.status }}</span>
+                        {% if ticket.priority == 'Critical' %}
+                            <span class="badge bg-danger">{{ ticket.priority }}</span>
+                        {% elif ticket.priority == 'High' %}
+                            <span class="badge bg-warning">{{ ticket.priority }}</span>
+                        {% elif ticket.priority == 'Medium' %}
+                            <span class="badge bg-info">{{ ticket.priority }}</span>
+                        {% else %}
+                            <span class="badge bg-success">{{ ticket.priority }}</span>
+                        {% endif %}
+                        
+                        {% if ticket.status == 'Open' %}
+                            <span class="badge bg-danger">{{ ticket.status }}</span>
+                        {% elif ticket.status == 'In Progress' %}
+                            <span class="badge bg-warning">{{ ticket.status }}</span>
+                        {% elif ticket.status == 'Resolved' %}
+                            <span class="badge bg-success">{{ ticket.status }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ ticket.status }}</span>
+                        {% endif %}
+                        
                         <span class="badge bg-secondary">{{ ticket.category }}</span>
                     </div>
                 </div>
-                <div class="btn-group">
-                    <button class="btn btn-outline-primary" onclick="printTicket()">
-                        <i class="bi bi-printer me-1"></i>Print
-                    </button>
-                    <button class="btn btn-outline-secondary" onclick="exportTicket()">
-                        <i class="bi bi-download me-1"></i>Export
-                    </button>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                            <i class="bi bi-three-dots"></i>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" onclick="duplicateTicket()">
-                                <i class="bi bi-files me-2"></i>Duplicate
-                            </a></li>
-                            <li><a class="dropdown-item" href="#" onclick="mergeTicket()">
-                                <i class="bi bi-arrow-left-right me-2"></i>Merge
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteTicket()">
-                                <i class="bi bi-trash me-2"></i>Delete
-                            </a></li>
-                        </ul>
-                    </div>
+                <div>
+                    <a href="{{ url_for('tickets') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Tickets
+                    </a>
                 </div>
             </div>
         </div>
@@ -71,50 +69,14 @@
                 </div>
             </div>
 
-            <!-- Comments/Updates Section -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
+            <!-- Activity Timeline -->
+            <div class="card">
+                <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="bi bi-chat-dots me-2"></i>Updates & Comments
+                        <i class="bi bi-clock-history me-2"></i>Activity Timeline
                     </h5>
-                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#addComment">
-                        <i class="bi bi-plus me-1"></i>Add Comment
-                    </button>
                 </div>
                 <div class="card-body">
-                    <!-- Add Comment Form -->
-                    <div class="collapse mb-4" id="addComment">
-                        <form id="commentForm" class="border rounded p-3 bg-light">
-                            <div class="mb-3">
-                                <label for="commentText" class="form-label">Add Comment</label>
-                                <textarea class="form-control" id="commentText" rows="3" 
-                                          placeholder="Type your comment or update here..."></textarea>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="commentType" class="form-label">Comment Type</label>
-                                    <select class="form-select" id="commentType">
-                                        <option value="comment">Internal Comment</option>
-                                        <option value="customer_update">Customer Update</option>
-                                        <option value="status_change">Status Change</option>
-                                        <option value="resolution">Resolution</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 d-flex align-items-end">
-                                    <div class="d-flex gap-2">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-send me-1"></i>Add Comment
-                                        </button>
-                                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#addComment">
-                                            Cancel
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Comments Timeline -->
                     <div class="timeline">
                         <!-- Ticket Created -->
                         <div class="timeline-item">
@@ -148,7 +110,7 @@
                         </div>
                         {% endif %}
 
-                        <!-- Status Updates (simulated) -->
+                        <!-- Status Updates -->
                         {% if ticket.status != 'Open' %}
                         <div class="timeline-item">
                             <div class="timeline-marker bg-warning"></div>
@@ -171,50 +133,6 @@
 
         <!-- Sidebar -->
         <div class="col-lg-4">
-            <!-- Quick Actions -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-lightning me-2"></i>Quick Actions
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('update_ticket', ticket_id=ticket.id) }}">
-                        <div class="mb-3">
-                            <label for="status" class="form-label">Status</label>
-                            <select class="form-select" id="status" name="status" onchange="this.form.submit()">
-                                <option value="Open" {{ 'selected' if ticket.status == 'Open' }}>Open</option>
-                                <option value="In Progress" {{ 'selected' if ticket.status == 'In Progress' }}>In Progress</option>
-                                <option value="Resolved" {{ 'selected' if ticket.status == 'Resolved' }}>Resolved</option>
-                                <option value="Closed" {{ 'selected' if ticket.status == 'Closed' }}>Closed</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="priority" class="form-label">Priority</label>
-                            <select class="form-select" id="priority" name="priority" onchange="this.form.submit()">
-                                <option value="Low" {{ 'selected' if ticket.priority == 'Low' }}>Low</option>
-                                <option value="Medium" {{ 'selected' if ticket.priority == 'Medium' }}>Medium</option>
-                                <option value="High" {{ 'selected' if ticket.priority == 'High' }}>High</option>
-                                <option value="Critical" {{ 'selected' if ticket.priority == 'Critical' }}>Critical</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="assigned_to" class="form-label">Assign To</label>
-                            <select class="form-select" id="assigned_to" name="assigned_to" onchange="this.form.submit()">
-                                <option value="">Unassigned</option>
-                                {% for engineer in engineers %}
-                                <option value="{{ engineer.full_name }}" {{ 'selected' if ticket.assigned_to == engineer.full_name }}>
-                                    {{ engineer.full_name }} ({{ engineer.role }})
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <!-- Ticket Information -->
             <div class="card mb-4">
                 <div class="card-header">
@@ -293,60 +211,47 @@
                 </div>
             </div>
 
-            <!-- Related Articles -->
+            <!-- Quick Actions -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="bi bi-book me-2"></i>Related Articles
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        <!-- Simulated related articles based on category -->
-                        {% if ticket.category == 'WiFi' %}
-                        <a href="#" class="list-group-item list-group-item-action border-0">
-                            <h6 class="mb-1">WiFi Connectivity Issues</h6>
-                            <small class="text-muted">Step-by-step troubleshooting guide</small>
-                        </a>
-                        <a href="#" class="list-group-item list-group-item-action border-0">
-                            <h6 class="mb-1">Access Point Configuration</h6>
-                            <small class="text-muted">Hardware setup and configuration</small>
-                        </a>
-                        {% elif ticket.category == 'DHCP' %}
-                        <a href="#" class="list-group-item list-group-item-action border-0">
-                            <h6 class="mb-1">DHCP Scope Exhaustion</h6>
-                            <small class="text-muted">Troubleshooting DHCP issues</small>
-                        </a>
-                        <a href="#" class="list-group-item list-group-item-action border-0">
-                            <h6 class="mb-1">IP Address Management</h6>
-                            <small class="text-muted">Best practices for DHCP</small>
-                        </a>
-                        {% elif ticket.category == 'VPN' %}
-                        <a href="#" class="list-group-item list-group-item-action border-0">
-                            <h6 class="mb-1">VPN Connection Troubleshooting</h6>
-                            <small class="text-muted">Common VPN issues and solutions</small>
-                        </a>
-                        <a href="#" class="list-group-item list-group-item-action border-0">
-                            <h6 class="mb-1">Remote Access Setup</h6>
-                            <small class="text-muted">VPN configuration guide</small>
-                        </a>
-                        {% else %}
-                        <a href="#" class="list-group-item list-group-item-action border-0">
-                            <h6 class="mb-1">General Troubleshooting</h6>
-                            <small class="text-muted">Common network issues</small>
-                        </a>
-                        <a href="#" class="list-group-item list-group-item-action border-0">
-                            <h6 class="mb-1">Network Diagnostics</h6>
-                            <small class="text-muted">Tools and procedures</small>
-                        </a>
-                        {% endif %}
-                    </div>
-                    <div class="mt-3">
-                        <a href="{{ url_for('knowledge_base', category=ticket.category) }}" 
-                           class="btn btn-sm btn-outline-primary w-100">
-                            <i class="bi bi-arrow-right me-1"></i>View All {{ ticket.category }} Articles
-                        </a>
-                    </div>
+                    <form method="POST" action="{{ url_for('update_ticket', ticket_id=ticket.id) }}">
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status" onchange="this.form.submit()">
+                                <option value="Open" {{ 'selected' if ticket.status == 'Open' }}>Open</option>
+                                <option value="In Progress" {{ 'selected' if ticket.status == 'In Progress' }}>In Progress</option>
+                                <option value="Resolved" {{ 'selected' if ticket.status == 'Resolved' }}>Resolved</option>
+                                <option value="Closed" {{ 'selected' if ticket.status == 'Closed' }}>Closed</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">Priority</label>
+                            <select class="form-select" id="priority" name="priority" onchange="this.form.submit()">
+                                <option value="Low" {{ 'selected' if ticket.priority == 'Low' }}>Low</option>
+                                <option value="Medium" {{ 'selected' if ticket.priority == 'Medium' }}>Medium</option>
+                                <option value="High" {{ 'selected' if ticket.priority == 'High' }}>High</option>
+                                <option value="Critical" {{ 'selected' if ticket.priority == 'Critical' }}>Critical</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="assigned_to" class="form-label">Assign To</label>
+                            <select class="form-select" id="assigned_to" name="assigned_to" onchange="this.form.submit()">
+                                <option value="">Unassigned</option>
+                                {% for engineer in engineers %}
+                                <option value="{{ engineer.full_name }}" {{ 'selected' if ticket.assigned_to == engineer.full_name }}>
+                                    {{ engineer.full_name }} ({{ engineer.role }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -359,19 +264,16 @@
                 </div>
                 <div class="card-body">
                     <div class="text-center mb-3">
-                        <i class="bi bi-person-circle display-4 text-muted"></i>
+                        <i class="bi bi-person-circle" style="font-size: 3rem; color: #6c757d;"></i>
                         <h6 class="mt-2">{{ ticket.customer_email.split('@')[0].title() }}</h6>
                         <small class="text-muted">{{ ticket.customer_email }}</small>
                     </div>
                     
-                    <div class="d-grid gap-2">
+                    <div class="d-grid">
                         <a href="mailto:{{ ticket.customer_email }}?subject=Re: {{ ticket.title }} (Ticket #{{ ticket.id }})" 
                            class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-envelope me-1"></i>Send Email
                         </a>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="viewCustomerHistory()">
-                            <i class="bi bi-clock-history me-1"></i>View History
-                        </button>
                     </div>
                 </div>
             </div>
@@ -382,98 +284,9 @@
 
 {% block scripts %}
 <script>
-function printTicket() {
-    window.print();
-}
-
-function exportTicket() {
-    const ticketData = {
-        id: {{ ticket.id }},
-        title: "{{ ticket.title }}",
-        description: "{{ ticket.description|replace('\n', '\\n')|replace('"', '\\"') }}",
-        priority: "{{ ticket.priority }}",
-        status: "{{ ticket.status }}",
-        category: "{{ ticket.category }}",
-        customer_email: "{{ ticket.customer_email }}",
-        assigned_to: "{{ ticket.assigned_to or '' }}",
-        created_date: "{{ ticket.created_date.strftime('%Y-%m-%d %H:%M:%S') }}",
-        updated_date: "{{ ticket.updated_date.strftime('%Y-%m-%d %H:%M:%S') if ticket.updated_date else '' }}"
-    };
-    
-    if (window.dashboardFunctions) {
-        window.dashboardFunctions.exportToCSV([ticketData], `ticket_${ticketData.id}.csv`);
-    }
-}
-
-function duplicateTicket() {
-    if (confirm('Create a duplicate of this ticket?')) {
-        // In a real application, you would make an API call to duplicate the ticket
-        if (window.dashboardFunctions) {
-            window.dashboardFunctions.showNotification('Duplicate functionality would be implemented here', 'info');
-        }
-    }
-}
-
-function mergeTicket() {
-    // In a real application, you would show a modal to select tickets to merge
-    if (window.dashboardFunctions) {
-        window.dashboardFunctions.showNotification('Merge functionality would be implemented here', 'info');
-    }
-}
-
-function deleteTicket() {
-    if (confirm('Are you sure you want to delete this ticket? This action cannot be undone.')) {
-        // In a real application, you would make an API call to delete the ticket
-        if (window.dashboardFunctions) {
-            window.dashboardFunctions.showNotification('Delete functionality would be implemented here', 'warning');
-        }
-    }
-}
-
-function viewCustomerHistory() {
-    // In a real application, you would show customer's ticket history
-    if (window.dashboardFunctions) {
-        window.dashboardFunctions.showNotification('Customer history functionality would be implemented here', 'info');
-    }
-}
-
-// Comment form submission
-document.getElementById('commentForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const commentText = document.getElementById('commentText').value;
-    const commentType = document.getElementById('commentType').value;
-    
-    if (!commentText.trim()) {
-        alert('Please enter a comment');
-        return;
-    }
-    
-    // In a real application, you would submit the comment to your API
-    console.log('Comment:', { text: commentText, type: commentType, ticketId: {{ ticket.id }} });
-    
-    if (window.dashboardFunctions) {
-        window.dashboardFunctions.showNotification('Comment added successfully!', 'success');
-    }
-    
-    // Reset form and close
-    this.reset();
-    bootstrap.Collapse.getInstance(document.getElementById('addComment')).hide();
-    
-    // In a real app, you would refresh the timeline or add the comment dynamically
-});
-
-// Auto-save functionality for long descriptions
+// Add some interactivity if needed
 document.addEventListener('DOMContentLoaded', function() {
-    // Add print styles
-    const printStyles = `
-        <style media="print">
-            .btn, .dropdown, .card-header .bi { display: none !important; }
-            .card { border: 1px solid #000 !important; }
-            body { background: white !important; }
-        </style>
-    `;
-    document.head.insertAdjacentHTML('beforeend', printStyles);
+    console.log('Ticket detail page loaded for ticket #{{ ticket.id }}');
 });
 </script>
 
@@ -515,22 +328,6 @@ document.addEventListener('DOMContentLoaded', function() {
     border: 1px solid #e9ecef;
     border-radius: 8px;
     padding: 15px;
-}
-
-/* Print Styles */
-@media print {
-    .btn, .dropdown, .timeline-marker {
-        display: none !important;
-    }
-    
-    .card {
-        border: 1px solid #000 !important;
-        break-inside: avoid;
-    }
-    
-    .timeline-content {
-        border: 1px solid #000 !important;
-    }
 }
 </style>
 {% endblock %}
